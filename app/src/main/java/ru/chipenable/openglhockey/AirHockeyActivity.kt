@@ -5,12 +5,15 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import org.jetbrains.anko.toast
+import ru.chipenable.openglhockey.util.readTextFileFromResource
 
 class AirHockeyActivity : AppCompatActivity() {
 
     private lateinit var glSurfaceView: GLSurfaceView
     private var rendererSet: Boolean = false
+    private val TAG = AirHockeyActivity::class.java.name
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,13 +29,16 @@ class AirHockeyActivity : AppCompatActivity() {
             glSurfaceView.setEGLContextClientVersion(2)
 
             // Assign our renderer.
-            glSurfaceView.setRenderer(AirHockeyRenderer())
+            glSurfaceView.setRenderer(AirHockeyRenderer(this))
             rendererSet = true
         }
         else{
             toast("This device does not support OpenGL ES 2.0")
             return
         }
+
+        val shader = readTextFileFromResource(this, R.raw.simple_vertex_shader)
+        Log.d(TAG, "shader: $shader")
 
         setContentView(glSurfaceView)
     }
