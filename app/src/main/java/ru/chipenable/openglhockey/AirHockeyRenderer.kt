@@ -98,7 +98,8 @@ class AirHockeyRenderer(val context: Context): GLSurfaceView.Renderer {
         perspectiveM(projectionMatrix, 45f, width.toFloat()/height.toFloat(), 1f, 10f)
 
         setIdentityM(modelMatrix, 0)
-        translateM(modelMatrix, 0, 0f, 0f, -2f)
+        translateM(modelMatrix, 0, 0f, 0f, -2.5f)
+        rotateM(modelMatrix, 0, -60f, 1f, 0f, 0f)
 
         val temp = FloatArray(16)
         multiplyMM(temp, 0, projectionMatrix, 0, modelMatrix, 0)
