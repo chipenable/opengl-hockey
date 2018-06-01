@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import org.jetbrains.anko.toast
 
-class FirstOpenGLProjectActivity : AppCompatActivity() {
+class AirHockeyActivity : AppCompatActivity() {
 
     private lateinit var glSurfaceView: GLSurfaceView
     private var rendererSet: Boolean = false
@@ -26,7 +26,7 @@ class FirstOpenGLProjectActivity : AppCompatActivity() {
             glSurfaceView.setEGLContextClientVersion(2)
 
             // Assign our renderer.
-            glSurfaceView.setRenderer(FirstOpenGLProjectRenderer())
+            glSurfaceView.setRenderer(AirHockeyRenderer())
             rendererSet = true
         }
         else{
