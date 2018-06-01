@@ -3,7 +3,7 @@ package ru.chipenable.openglhockey
 import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
-import android.opengl.Matrix.orthoM
+import android.opengl.Matrix.*
 import ru.chipenable.openglhockey.util.*
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -18,7 +18,7 @@ class AirHockeyRenderer(val context: Context): GLSurfaceView.Renderer {
 
     private companion object {
         val COLOR_COMPONENT_COUNT = 3
-        val POSITION_COMPONENT_COUNT = 2
+        val POSITION_COMPONENT_COUNT = 4
         val BYTES_PER_FLOAT = 4
         val U_COLOR = "u_Color"
         val A_POSITION = "a_Position"
@@ -32,25 +32,26 @@ class AirHockeyRenderer(val context: Context): GLSurfaceView.Renderer {
     private var program = 0
     private var uMatrixLocation = 0
     private val projectionMatrix = FloatArray(16)
+    private val modelMatrix = FloatArray(16)
 
     private val vertexData: FloatBuffer
     private val tableVerticesWithTriangles: FloatArray = floatArrayOf(
             // Triangle Fan
-             0f,    0f,   1f,   1f,   1f,
-            -0.5f, -0.8f, 0.7f, 0.7f, 0.7f,
-             0.5f, -0.8f, 0.7f, 0.7f, 0.7f,
+               0f,    0f, 0f,   1f,   1f,   1f,   1f,
+            -0.5f, -0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
+             0.5f, -0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
 
-             0.5f,  0.8f, 0.7f, 0.7f, 0.7f,
-            -0.5f,  0.8f, 0.7f, 0.7f, 0.7f,
-            -0.5f, -0.8f, 0.7f, 0.7f, 0.7f,
+             0.5f,  0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
+            -0.5f,  0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
+            -0.5f, -0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
 
             // Line 1
-            -0.5f, 0f, 1f, 0f, 0f,
-            0.5f, 0f, 1f, 0f, 0f,
+            -0.5f, 0f, 0f, 1f, 1f, 0f, 0f,
+             0.5f, 0f, 0f, 1f, 1f, 0f, 0f,
 
             // Mallets
-            0f, -0.4f, 0f, 0f, 1f,
-            0f, 0.4f, 1f, 0f, 0f
+            0f, -0.4f, 0f, 1f, 0f, 0f, 1f,
+            0f,  0.4f, 0f, 1f, 1f, 0f, 0f
     )
 
     init{
@@ -94,19 +95,14 @@ class AirHockeyRenderer(val context: Context): GLSurfaceView.Renderer {
         // Set the open gl viewport to fill the entire surface.
         glViewport(0, 0, width, height)
 
-        val aspectRatio: Float = if (width > height){
-            width.toFloat()/height.toFloat()
-        }
-        else{
-            height.toFloat()/width.toFloat()
-        }
+        perspectiveM(projectionMatrix, 45f, width.toFloat()/height.toFloat(), 1f, 10f)
 
-        if (width > height){
-            orthoM(projectionMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, -1f, 1f)
-        }
-        else{
-            orthoM(projectionMatrix, 0, -1f, 1f, -aspectRatio, aspectRatio, -1f, 1f)
-        }
+        setIdentityM(modelMatrix, 0)
+        translateM(modelMatrix, 0, 0f, 0f, -2f)
+
+        val temp = FloatArray(16)
+        multiplyMM(temp, 0, projectionMatrix, 0, modelMatrix, 0)
+        System.arraycopy(temp, 0, projectionMatrix, 0, temp.size)
 
         debugLogger(TAG){
             "Projection matrix: ${projectionMatrix.contentToString()}"
