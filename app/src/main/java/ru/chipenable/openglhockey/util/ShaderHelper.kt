@@ -6,7 +6,17 @@ import android.opengl.GLES20.*
  * Created by Pavel.B on 26.05.2018.
  */
 
-val TAG = "ShaderHelper"
+private val TAG = "ShaderHelper"
+
+fun buildProgram(vertexShaderSource: String, fragmentShaderSource: String): Int {
+
+    val vertexShader = compileVertexShader(vertexShaderSource)
+    val fragmentShader = compileFragmentShader(fragmentShaderSource)
+    val program = linkProgram(vertexShader, fragmentShader)
+
+    validateProgram(program)
+    return program
+}
 
 fun linkProgram(vertexShaderId: Int, fragmentShaderId: Int): Int {
     val programObjectId = glCreateProgram()

@@ -58,4 +58,5 @@ class AirHockeyActivity : AppCompatActivity() {
             glSurfaceView.onPause()
         }
     }
+
 }
