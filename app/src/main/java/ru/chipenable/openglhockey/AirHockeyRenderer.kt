@@ -4,10 +4,11 @@ import android.content.Context
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix.*
+import ru.chipenable.openglhockey.objects.Mallet
+import ru.chipenable.openglhockey.objects.Table
+import ru.chipenable.openglhockey.programs.ColorShaderProgram
+import ru.chipenable.openglhockey.programs.TextureShaderProgram
 import ru.chipenable.openglhockey.util.*
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
-import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -16,58 +17,31 @@ import javax.microedition.khronos.opengles.GL10
  */
 class AirHockeyRenderer(val context: Context): GLSurfaceView.Renderer {
 
-    private companion object {
-        val COLOR_COMPONENT_COUNT = 3
-        val POSITION_COMPONENT_COUNT = 4
-        val BYTES_PER_FLOAT = 4
-        val U_COLOR = "u_Color"
-        val A_POSITION = "a_Position"
-        val A_COLOR = "a_Color"
-        val STRIDE = (POSITION_COMPONENT_COUNT + COLOR_COMPONENT_COUNT) * BYTES_PER_FLOAT
-        val U_MATRIX = "u_Matrix"
-    }
+    private lateinit var table: Table
+    private lateinit var mallet: Mallet
 
-    private var aPositionLocation = 0
-    private var aColorLocation = 0
-    private var program = 0
-    private var uMatrixLocation = 0
+    private lateinit var textureProgram: TextureShaderProgram
+    private lateinit var colorProgram: ColorShaderProgram
+
+    private var texture = 0
+
     private val projectionMatrix = FloatArray(16)
     private val modelMatrix = FloatArray(16)
 
-    private val vertexData: FloatBuffer
-    private val tableVerticesWithTriangles: FloatArray = floatArrayOf(
-            // Triangle Fan
-               0f,    0f, 0f,   1f,   1f,   1f,   1f,
-            -0.5f, -0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
-             0.5f, -0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
-
-             0.5f,  0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
-            -0.5f,  0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
-            -0.5f, -0.8f, 0f,   1f, 0.7f, 0.7f, 0.7f,
-
-            // Line 1
-            -0.5f, 0f, 0f, 1f, 1f, 0f, 0f,
-             0.5f, 0f, 0f, 1f, 1f, 0f, 0f,
-
-            // Mallets
-            0f, -0.4f, 0f, 1f, 0f, 0f, 1f,
-            0f,  0.4f, 0f, 1f, 1f, 0f, 0f
-    )
-
-    init{
-        vertexData = ByteBuffer
-                .allocateDirect(tableVerticesWithTriangles.size * BYTES_PER_FLOAT)
-                .order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-
-        vertexData.put(tableVerticesWithTriangles)
-    }
-
+    private val TAG = "AirHockeyRenderer"
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig?) {
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
 
-        val vertexShaderSource = readTextFileFromResource(context, R.raw.simple_vertex_shader)
+        table = Table()
+        mallet = Mallet()
+
+        textureProgram = TextureShaderProgram(context)
+        colorProgram = ColorShaderProgram(context)
+
+        texture = loadTexture(context, R.drawable.air_hockey_surface)
+
+        /*val vertexShaderSource = readTextFileFromResource(context, R.raw.simple_vertex_shader)
         val fragmentShaderSource = readTextFileFromResource(context, R.raw.simple_fragment_shader)
         val vertexShader = compileVertexShader(vertexShaderSource)
         val fragmentShader = compileFragmentShader(fragmentShaderSource)
@@ -87,7 +61,7 @@ class AirHockeyRenderer(val context: Context): GLSurfaceView.Renderer {
         vertexData.position(POSITION_COMPONENT_COUNT)
         glVertexAttribPointer(aColorLocation, COLOR_COMPONENT_COUNT,
                 GL_FLOAT, false, STRIDE, vertexData)
-        glEnableVertexAttribArray(aColorLocation)
+        glEnableVertexAttribArray(aColorLocation)*/
 
     }
 
@@ -114,18 +88,18 @@ class AirHockeyRenderer(val context: Context): GLSurfaceView.Renderer {
         // Clear the rendering surface.
         glClear(GL_COLOR_BUFFER_BIT)
 
-        glUniformMatrix4fv(uMatrixLocation, 1, false, projectionMatrix, 0)
+        // Draw the table
+        textureProgram.useProgram()
+        textureProgram.setUniforms(projectionMatrix, texture)
+        table.bindData(textureProgram)
+        table.draw()
 
-        glUniform4f(aColorLocation, 1.0f, 1.0f, 1.0f, 1.0f)
-        glDrawArrays(GL_TRIANGLE_FAN, 0, 6)
+        // Draw the mallets
+        colorProgram.useProgram()
+        colorProgram.setUniform(projectionMatrix)
+        mallet.bindData(colorProgram)
+        mallet.draw()
 
-        glUniform4f(aColorLocation, 1.0f, 0.0f, 0.0f,1.0f)
-        glDrawArrays(GL_LINES, 6, 2)
 
-        glUniform4f(GL_POINTS, 0.0f, 0.0f, 1.0f, 1.0f)
-        glDrawArrays(GL_POINTS, 8, 1)
-
-        glUniform4f(GL_POINTS, 0.0f, 0.0f, 0.0f, 1.0f)
-        glDrawArrays(GL_POINTS, 9, 1)
     }
 }
